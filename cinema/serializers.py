@@ -122,6 +122,10 @@ class TicketSerializer(serializers.ModelSerializer):
         return attrs
 
 
+class TicketListSerializer(TicketSerializer):
+    movie_session = MovieSessionListSerializer(many=False, read_only=True)
+
+
 class OrderSerializer(serializers.ModelSerializer):
     tickets = TicketSerializer(many=True, read_only=False, allow_empty=False)
 
@@ -135,3 +139,8 @@ class OrderSerializer(serializers.ModelSerializer):
         for ticket_data in tickets_data:
             Ticket.objects.create(order=order, **ticket_data)
         return order
+
+
+class OrderDataSerializer(OrderSerializer):
+
+    tickets = TicketListSerializer(many=True)
