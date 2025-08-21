@@ -53,9 +53,9 @@ class MovieViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = self.queryset
 
-        genres = self.request.GET.get("genres")
-        actors = self.request.GET.get("actors")
-        title = self.request.GET.get("title")
+        genres = self.request.query_params.get("genres")
+        actors = self.request.query_params.get("actors")
+        title = self.request.query_params.get("title")
         if genres:
             genres = self._params_to_ints(genres)
             queryset = queryset.filter(genres__id__in=genres)
@@ -64,9 +64,6 @@ class MovieViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(actors__id__in=actors)
         if title:
             queryset = queryset.filter(title__icontains=title)
-
-        if self.action in ("retrieve", "list"):
-            queryset = queryset.prefetch_related("genres", "actors")
 
         return queryset.distinct()
 
@@ -87,14 +84,17 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = self.queryset
 
-        show_date = self.request.GET.get("date")
-        movie = self.request.GET.get("movie")
-        if show_date and movie.isdigit():
-            queryset.filter(show_time=show_date, movie__id=int(movie))
+        show_date = self.request.query_params.get("date")
+        movie_id = self.request.query_params.get("movie")
+        if show_date and movie_id:
+            queryset = queryset.filter(
+                show_time=show_date,
+                movie__id=int(movie_id)
+            )
         elif show_date:
-            queryset = queryset.filter(show_time__date=show_date)
-        elif movie.isdigit():
-            movie = int(movie)
+            queryset = queryset.filter(show_time=show_date)
+        elif movie_id:
+            movie = int(movie_id)
             queryset = queryset.filter(movie__id=movie)
         if self.action == "list":
             queryset = (
